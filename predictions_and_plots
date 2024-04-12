@@ -1,0 +1,495 @@
+#### Forecast analysis
+#packages
+library(gridExtra)
+library(PRROC)
+library(plm)
+library(readr)
+
+
+# ROC analysis
+roc_logit <- roc(x.test_all, exporter, prob_logit)
+roc_lasso <- roc(x.test_all, exporter, prob_lasso)
+roc_bart <- roc(x.test_all, exporter, prob_bart)
+roc_bartM <- roc(x.test_all, exporter, prob_bartM)
+roc_RF <- roc(x.test_all, exporter, prob_RF)
+roc_NN <- roc(x.test_all, exporter, scores)
+
+print(roc_logit)
+auc(roc_logit)
+auc(roc_lasso)
+auc(roc_bart)
+auc(roc_bartM)
+auc(roc_RF)
+auc(roc_NN)
+
+# Creating plot
+jpeg(filename = "ROCsV4.jpg",
+     width = 3000, height = 4000, units = "px", pointsize = 100,
+     quality = 4000)
+par(mfcol = c(3, 2))
+plot(roc_logit, main="Logit (AUC = 0.8451)", xlab="", xlim=c(1,-0), col='red', lwd = 5)
+plot(roc_lasso, main="Lasso (AUC = 0.8426)", xlab="", xlim=c(1,-0), col='red', lwd = 5)
+plot(roc_bart, main="BART (AUC = 0.8821)", xlim=c(1,-0), col='red', lwd = 5)
+plot(roc_bartM, main = "BART-MIA (AUC = 0.8794)", xlab="", ylab="", xlim=c(1,-0), col='red', lwd = 5)
+plot(roc_RF, main = "Random Forest (AUC = 0.8719)", xlab="", ylab="", xlim=c(1,-0), col='red', lwd = 5)
+plot(roc_NN, main = "Neural Networks (AUC = 0.9481)", ylab="", xlim=c(1,-0), col='red', lwd = 5)
+dev.off()
+
+plot1 <- ggroc(roc_logit, xlab="", xlim=c(1,-0), col='black', lwd = 1.5)+ 
+  xlab("") + ggtitle("Logit (AUC = 0.815)")+theme_bw()
+plot2 <- ggroc(roc_lasso, main="", xlab="", xlim=c(1,-0), col='black', lwd = 1.5)+ 
+  xlab("") + ylab('') + ggtitle("Logit-Lasso (AUC = 0.813)")+theme_bw()
+plot3 <- ggroc(roc_bart, xlim=c(1,-0), col='black', lwd = 1.5)+
+  xlab("") +ggtitle("BART (AUC = 0.892)")+theme_bw()
+plot4 <- ggroc(roc_bartM, xlab="", ylab="", xlim=c(1,-0), col='black', lwd = 1.5)+ 
+  xlab("") + ylab("")+ ggtitle("BART-MIA (AUC = 0.90)")+theme_bw()
+plot5 <- ggroc(roc_RF, xlab="", ylab="", xlim=c(1,-0), col='black', lwd = 1.5)+ 
+   ggtitle("Random Forest (AUC = 0.832)")+theme_bw()
+plot6 <- ggroc(roc_NN, ylab="", xlim=c(1,-0), col='black', lwd = 1.5)+ 
+  ylab("")+ ggtitle("Neural Networks (AUC = 0.922)")+theme_bw()
+grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6, ncol=2)
+
+plots <- arrangeGrob(plot1, plot2, plot3, plot4, plot5, plot6, ncol=2)
+ggsave("ROCsV6.png", plots)
+#ggsave("ROCsV6.png", plots, width = 12, height = 15, units = "in")
+
+roc_logit <- roc(x.test_all, exporter, prob_logit)
+roc_lasso <- roc(x.test_all, exporter, prob_lasso)
+roc_bart <- roc(x.test_all, exporter, prob_bart)
+roc_bartM <- roc(x.test_all, exporter, prob_bartM)
+roc_RF <- roc(x.test_all, exporter, prob_RF)
+roc_NN <- roc(x.test_all, exporter, prob_NN)
+
+# Precision-recall (PR) Curve
+par(mfcol = c(3, 2))
+prLOGIT <- pr.curve(scores.class0 = x.test_all$prob_logit, weights.class0 = x.test_all$exporter, curve = T)
+plot(prLOGIT)
+prLOGIT_L <- pr.curve(scores.class0 = x.test_all$prob_lasso, weights.class0 = x.test_all$exporter, curve = T)
+plot(prLOGIT_L)
+prBART <- pr.curve(scores.class0 = x.test_all$prob_bart, weights.class0 = x.test_all$exporter, curve = T)
+plot(prBART)
+prBARTM <- pr.curve(scores.class0 = x.test_all$prob_bartM, weights.class0 = x.test_all$exporter, curve = T)
+plot(prBARTM)
+prRF <- pr.curve(scores.class0 = x.test_all$prob_RF, weights.class0 = x.test_all$exporter, curve = T)
+plot(prRF)
+prNN <- pr.curve(scores.class0 = x.test_all$scores, weights.class0 = x.test_all$exporter, curve = T)
+plot(prNN)
+
+jpeg(filename = "prLOGIT.jpg")
+plot(prLOGIT)
+dev.off()
+jpeg(filename = "prLOGIT_L.jpg")
+plot(prLOGIT_L)
+dev.off()
+jpeg(filename = "prBART.jpg")
+plot(prBART)
+dev.off()
+jpeg(filename = "prBARTM.jpg")
+plot(prBARTM)
+dev.off()
+jpeg(filename = "prRF.jpg")
+plot(prRF)
+dev.off()
+jpeg(filename = "prNN.jpg")
+plot(prNN)
+dev.off()
+
+grid.arrange(prLOGIT, prLOGIT_L, prBART, prBARTM, prRF, prNN, ncol=2)
+
+### Correlation between predictions
+## Spearman correlations
+# Logit x Lasso
+corr1 <- cor.test(x=x.test_all$predic_logit, y=x.test_all$predic_lasso, method = 'spearman', exact=FALSE)
+print(corr1)
+# Logit x Random Forest
+corr2 <- cor.test(x=x.test_all$predic_logit, y=x.test_all$predic_RF, method = 'spearman', exact=FALSE)
+print(corr2)
+# Logit x BART
+corr3 <- cor.test(x=x.test_all$predic_logit, y=x.test_all$predic_bart, method = 'spearman', exact=FALSE)
+print(corr3)
+# Logit x BART-MIA
+corr4 <- cor.test(x=x.test_all$predic_logit, y=x.test_all$predic_bartM, method = 'spearman', exact=FALSE)
+print(corr4)
+# Logit x NN
+corr5 <- cor.test(x=x.test_all$predic_logit, y=x.test_all$predic_NN, method = 'spearman', exact=FALSE)
+print(corr5)
+# Logit-Lasso x Random Forest
+corr6 <- cor.test(x=x.test_all$predic_lasso, y=x.test_all$predic_RF, method = 'spearman', exact=FALSE)
+print(corr6)
+# Logit-Lasso x BART
+corr7 <- cor.test(x=x.test_all$predic_lasso, y=x.test_all$predic_bart, method = 'spearman', exact=FALSE)
+print(corr7)
+# Logit-Lasso x BART-Mia
+corr8 <- cor.test(x=x.test_all$predic_lasso, y=x.test_all$predic_bartM, method = 'spearman', exact=FALSE)
+print(corr8)
+# Logit-Lasso x NN
+corr9 <- cor.test(x=x.test_all$predic_lasso, y=x.test_all$predic_NN, method = 'spearman', exact=FALSE)
+print(corr9)
+# Random Forest x BART
+corr10 <- cor.test(x=x.test_all$predic_RF, y=x.test_all$predic_bart, method = 'spearman', exact=FALSE)
+print(corr10)
+# Random Forest x BART-Mia
+corr11 <- cor.test(x=x.test_all$predic_RF, y=x.test_all$predic_bartM, method = 'spearman', exact=FALSE)
+print(corr11)
+# Random Forest x NN
+corr12 <- cor.test(x=x.test_all$predic_RF, y=x.test_all$predic_NN, method = 'spearman', exact=FALSE)
+print(corr12)
+# BART x BART-Mia
+corr13 <- cor.test(x=x.test_all$predic_bart, y=x.test_all$predic_bartM, method = 'spearman', exact=FALSE)
+print(corr13)
+# BART x NN
+corr14 <- cor.test(x=x.test_all$predic_bart, y=x.test_all$predic_NN, method = 'spearman', exact=FALSE)
+print(corr14)
+# BART-MIA x NN
+corr15 <- cor.test(x=x.test_all$predic_bartM, y=x.test_all$predic_NN, method = 'pearson', exact=FALSE)
+print(corr15)
+
+
+###############################################
+## Neural Networks for predicting non-exporters
+
+ScoresNonExporters <- read_csv("Results/Neural Network/24_Feb_V1_0.9_Chosen/Scores_Non_exporters.csv")
+head(ScoresNonExporters)
+
+ScoresNonExporters <- ScoresNonExporters %>%
+  rename(
+    scores = '0')
+
+
+## plot the density distribution of nonExporter scores
+nonExportersDensity <- ggplot(ScoresNonExporters, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 5) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() +
+  xlab("Predicted exporting score") + ylab("Density")
+plot(nonExportersDensity)
+ggsave("nonExportersDensityV2.png", nonExportersDensity)
+
+### export scores density by Sector
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==10)
+plot10 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Food products")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==11)
+plot11 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Beverages")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==13)
+plot13 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Textiles")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==14)
+plot14 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Wearing apparel")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==15)
+plot15 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Leather and related products")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==16)
+plot16 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Wood and products of wood and cork")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==17)
+plot17 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Paper and paper products")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==18)
+plot18 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Printing and reproduction of recorded media")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==19)
+plot19 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Coke and refined petroleum")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==20)
+plot20 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Chemicals and chemical products")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==21)
+plot21 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Pharmaceutical products")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==22)
+plot22 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Rubber and plastic products")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==23)
+plot23 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Other non-metallic products")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==24)
+plot24 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Basic metals")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==25)
+plot25 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Fabricated metal prod., except machinery and equipment")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==26)
+plot26 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Computer, electronic and optical products")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==27)
+plot27 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Electrical equipment")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==28)
+plot28 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Machinery and equipment")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==29)
+plot29 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Motor vehicle, trailers and semi-trailers")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==30)
+plot30 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Other transport equipment")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==31)
+plot31 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Furniture")+theme_bw()
+
+ScoresNonExportersAUX <- ScoresNonExporters2 %>%
+  filter(Divisao==32)
+plot32 <- ggplot(ScoresNonExportersAUX, aes(x=scores)) + 
+  geom_density(size=0.6, adjust = 3) + 
+  geom_vline(aes(xintercept=median(scores)),
+             color="black", linetype="dashed", size=0.4) + 
+  theme_bw() + 
+  xlab("Predicted exporting score") + ylab("Density") + 
+  ggtitle("Other manufacturing")+theme_bw()
+
+grid.arrange(plot10, plot11, plot13, plot14, plot15,
+             plot16, plot17, plot18, plot19, plot20,
+             plot21, plot22,  ncol=2)
+grid.arrange(plot23, plot24,plot25,
+             plot26, plot27, plot28, plot29, plot30,
+             plot31, plot32,
+             ncol=2)
+distSetor1 <- arrangeGrob(plot10, plot11, plot13, plot14, plot15,
+             plot16, plot17, plot18, plot19, plot20,
+             plot21, plot22,  ncol=2)
+distSetor2 <- arrangeGrob(plot23, plot24,plot25,
+             plot26, plot27, plot28, plot29, plot30,
+             plot31, plot32,
+             ncol=2)
+ggsave("distSetor1.png", distSetor1, width = 12, height = 15, units = "in")
+ggsave("distSetor2.png", distSetor2, width = 12, height = 15, units = "in")
+
+
+
+load("df.RData")
+data6 <- df
+
+#### back-to-envelope estimates - total assets
+ScoresNonExportersC <- left_join(ScoresNonExporters, data6, by=c("NIPC", "Ano"))
+
+fixed <- plm(log(ASSETS) ~ factor(decil)+ covariates,
+             data=ScoresNonExportersC, index=c("NIPC", "Ano"), model="between")
+summary(fixed, cluster= c("NIPC"))
+
+coeff1 <- fixed$coefficients[1:10]
+
+coeff0<- c( 0.4137271, -0.1058805, 0.5867259, 0.8814981, 0.6775797, 0.7171217, 1.4652580, 2.1605492, 2.7048487)
+sd <- c( 0.03929224, 0.05157436, 0.04150739, 0.04367928, 0.04581177, 0.04717502, 0.04839916, 0.04953298, 0.06168477)
+grupo <- c("0.1-0.19", "0.2-0.29", "0.3-0.39", "0.4-0.49", "0.5-0.59", "0.6-0.69", "0.7-0.79", "0.8-0.89", "0.9-1")
+
+coeffPlot <- tibble(coeff0, sd, grupo)
+
+plotCoef <-ggplot(coeffPlot, aes(grupo, coeff0)) +
+  geom_point(size = 2) +
+  geom_linerange(aes(ymin = coeff0-(sd*2.575),ymax = coeff0+(sd*2.575)),
+                    width = 0.2)+
+  theme_bw() + 
+  xlab("Risk groups-exporting score")+ylab("Estimated coefficients")
+
+ggsave("plotCoef.png", plotCoef, width = 10, height = 6, units = "in")
+ggsave("plotCoefV2.png", plotCoef)
+
+
+
+##########
+# Our paper's idea
+  
+  # Function to generate scaled chi-squared random variables with a specified median and range
+  generate_scaled_chi_squared_process <- function(df, n, target_median, min_value, max_value) {
+    x <- rchisq(n, df = df)
+    current_median <- median(x)
+    
+    # Scale to the range [min_value, max_value] and adjust median
+    scaled_x <- min_value + (max_value - min_value) * (x - min(x)) / (max(x) - min(x))
+    scaled_x <- scaled_x + (target_median - median(scaled_x))
+    
+    scaled_x
+  }
+  
+  # Set parameters
+  num_samples <- 100000  # Number of samples
+  num_steps <- 10      # Number of time steps
+  df <- 4              # Degrees of freedom
+  target_median <- 0.16
+  min_value <- 0.00001
+  max_value <- 0.99999
+  
+  # Generate scaled chi-squared process with specified median and range
+  set.seed(123)  # Set seed for reproducibility
+  process_data <- replicate(num_steps, generate_scaled_chi_squared_process(df = df, n = num_samples, target_median = target_median, min_value = min_value, max_value = max_value))
+  
+  # Convert the data to a long format for plotting
+  df <- data.frame(
+    time_step = rep(1:num_steps, each = num_samples),
+    value = as.vector(process_data)
+  )
+  
+  # Create the plot using ggplot2
+dist_plot <- ggplot(df, aes(x = value)) +
+    geom_density(alpha = 0.5, adjust=3) +
+    labs(title = "",
+         x = "Predicted scores",
+         y = "Density") +
+    xlim(0, 1) +
+    ylim(0, 6) +
+    geom_vline(xintercept = 0.448, linetype = "dashed", color = "red") +
+    geom_vline(xintercept = 1, linetype = "dashed", color = "black") +
+    annotate("text", x = 0.448, y = 0.5, label = "i", vjust = -0.1, hjust = -0.5, color = "red", size = 5)+
+    geom_segment(x = 0.45, y = 0.48, xend = 1, yend = 0.48,
+                 arrow = arrow(type = "closed", length = unit(0.3, "cm")), color = "red") +
+    annotate("text", x = 0.725, y = 0.5, label = "Distance to export", vjust = -0.005, color = "red", size = 4) +
+    theme_bw()
+
+#print(dist_plot)
+  
+# Save the plot as a PNG file
+#ggsave("dist_plot.png", dist_plot, width = 10, height = 6, units = "in")
+ggsave("dist_plotV2.png", dist_plot, width = 20, height = 12, units = "in")
+ggsave("dist_plotV3.png", dist_plot, width = 30, height = 18, units = "in")
+ggsave("dist_plotV4.png", dist_plot)
