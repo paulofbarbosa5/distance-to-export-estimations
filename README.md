@@ -1,6 +1,6 @@
 # Distance to Export — Replication Code
 
-This repository contains the code for **“Distance to Export: A Machine Learning Approach with Portuguese Firms”** (Banco de Portugal Working Paper W202420) by João Amador, **Paulo Barbosa**, and João Cortes. It includes scripts and notebooks to estimate firms’ “distance to export” and reproduce the paper’s main tables and figures.
+This repository contains the code for **“Distance to Export: A Machine Learning Approach with Portuguese Firms”** (Banco de Portugal Working Paper W202420) by  **Paulo Barbosa**, João Amador, and João Cortes. It includes scripts and notebooks to estimate firms’ “distance to export” and reproduce the paper’s main tables and figures.
 
 ## Repository structure
 - `Logit_Logit-lasso_Bart_Bart-mia_Random-forest.R` — Fits Logit, Logit-LASSO, Random Forest, BART, and BART-MIA; exports metrics and plots.  
