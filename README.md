@@ -1,32 +1,18 @@
-# Distance to Export — Replication Code
+## Data and replication
 
-This repository contains the code for **“Distance to Export: A Machine Learning Approach with Portuguese Firms”** (Banco de Portugal Working Paper W202420) by  **Paulo Barbosa**, João Amador, and João Cortes. It includes scripts and notebooks to estimate firms’ “distance to export” and reproduce the paper’s main tables and figures.
+The raw firm-level data used in the paper are confidential and are not included in this repository. The analysis was not run through BPLIM. However, the code is designed to be compatible with the BPLIM secure environment because BPLIM provides access to the Central Balance Sheet database, which is annual firm-level data for Portuguese non-financial corporations and is mostly based on IES reporting.
 
-## Repository structure
-- `Logit_Logit-lasso_Bart_Bart-mia_Random-forest.R` — Fits Logit, Logit-LASSO, Random Forest, BART, and BART-MIA; exports metrics and plots.  
-- `Neural Network/` — Notebook(s) for the neural-network model; writes predictions and diagnostics.  
-- `predictions_and_plots/` — Saved predictions, figures, and tables used in the paper.
+Authorised researchers with access to an equivalent Central Balance Sheet/IES extract can reproduce the empirical workflow by adapting the configuration file to their approved data extract and running the scripts in sequence. Numerical results may differ slightly across data vintages or extracts.
 
-## Method (one-paragraph overview)
-We predict the probability that a firm becomes a **successful exporter** using rich firm-level data and a suite of ML models (Logit/penalized Logit, Random Forest, BART/BART-MIA, and a Neural Network). The paper compares out-of-sample performance across models and documents the importance of variables such as labour productivity, imports, capital intensity, wages, size, and age.
+This repository contains:
+- Python scripts for panel construction, validation splits, model estimation, evaluation, bootstrap inference and figure/table generation;
+- configuration templates for mapping original IES/CB variables into standardized variable names;
+- documentation of required variables and outputs;
+- paper-ready table and figure generation routines.
 
-## Data
-The original analysis relies on confidential Portuguese firm-level microdata and **cannot be redistributed**.  
-To run the code, provide an equivalent firm-year panel with:
-- **Identifiers:** firm ID, year  
-- **Outcome:** exporter status (as defined in the paper)  
-- **Features:** the variable set described in the manuscript (e.g., productivity, imports, capital intensity, wages, size, age, etc.)
-
-Point the scripts/notebooks to your dataset using the input paths at the top of each file. You can test the pipeline with mock data in the same structure.
-
-## Requirements
-- **R (≥ 4.x)** with packages for wrangling/plotting and modeling (e.g., `tidyverse`, `glmnet`, `randomForest` or `ranger`, BART libraries).  
-- **Python (≥ 3.x)** for the neural-network notebook (TensorFlow/Keras or PyTorch; plus `pandas`, `numpy`, `scikit-learn`).  
-
-Set seeds are used where applicable; minor deviations may occur due to algorithmic randomness and library versions.
-
-## Quick start
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/paulofbarbosa5/distance-to-export-estimations.git
-   cd distance-to-export-estimations
+This repository does not contain:
+- raw IES/CB data;
+- firm identifiers;
+- firm-level predictions;
+- fitted models based on confidential data;
+- any file that would allow firm-level disclosure.
